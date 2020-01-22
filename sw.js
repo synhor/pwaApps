@@ -1,8 +1,8 @@
 const appPath = location.href.replace('/sw.js','');
-const expectedCache = 'appOne_v2';
+const expectedCache = 'appOne_v5';
 const useServiceWorker = true;
 const serviceWorkerExcludedHosts = [];
-
+ 
 const filesToCache = [
     appPath + '/images/',
     appPath + '/index.html',
@@ -30,18 +30,21 @@ if (!useServiceWorker || serviceWorkerExcludedHosts.includes(self.registration.s
         }));
     });
     
-    //Krok 3: teraz aby móc korzystać z scachowanych zasobów musimy jeszcze zwrócić je do lokalnego cache’a.
+    //Krok 3 (deleted): teraz aby móc korzystać z scachowanych zasobów musimy jeszcze zwrócić je do lokalnego cache’a.
     //W tym celu dodamy event listenter na zdarzenie fetch.
-
+    
+    //Krok 6: Offline mode v2
     self.addEventListener('fetch', event => {
         event.respondWith(caches.open(expectedCache).then(cache =>
             cache.match(event.request).then(response => {
-                if (response) {
-                    console.log('[ServiceWorker] loaded from cache: ', event.request.url);
-                }
-                return response || fetch(event.request).then(response => {
+                return fetch(event.request).then(response => {
                     cache.put(event.request, response.clone());
                     console.log('[ServiceWorker] added to cache: ', event.request.url);
+                    return response;
+                }).catch(() => {
+                    if (response) {
+                        console.log('[ServiceWorker] Network failed. Loaded from cache: ', event.request.url);
+                    }
                     return response;
                 })
             })
