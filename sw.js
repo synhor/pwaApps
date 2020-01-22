@@ -1,5 +1,5 @@
 const appPath = location.href.replace('/sw.js','');
-const expectedCache = 'appOne_v5';
+const expectedCache = 'appOne_v6';
 const useServiceWorker = true;
 const serviceWorkerExcludedHosts = [];
  
@@ -9,6 +9,22 @@ const filesToCache = [
     appPath + '/clock.js',
     appPath + '/style.css'
 ];
+
+//Krok 7. IndexedDB
+const getProductsUrl = 'http://localhost/pwaServices/getProducts';
+
+self.importScripts('./idb/idb.js');
+
+function createDB() {
+    idb.open('products', 1, function(upgradeDB) {
+        var store = upgradeDB.createObjectStore('beverages', {
+            keyPath: 'id'
+        });
+        store.put({id: 123, name: 'coke', price: 10.99, quantity: 200});
+        store.put({id: 321, name: 'pepsi', price: 8.99, quantity: 100});
+        store.put({id: 222, name: 'water', price: 11.99, quantity: 300});
+    });
+}
 
 if (!useServiceWorker || serviceWorkerExcludedHosts.includes(self.registration.scope)) {
     //Krok 5: Opcjonalne wyłączanie
@@ -20,6 +36,11 @@ if (!useServiceWorker || serviceWorkerExcludedHosts.includes(self.registration.s
         }));
     });
 } else {
+    self.addEventListener('activate', function(event) {
+        event.waitUntil(
+          createDB()
+        );
+    });    
     // Krok 2.1: stworzenie nowego cache’a o nazwie v1
     // W tym celu dodamy event listenter na zdarzenie fetch.
     self.addEventListener('install', event => {
@@ -35,6 +56,27 @@ if (!useServiceWorker || serviceWorkerExcludedHosts.includes(self.registration.s
     
     //Krok 6: Offline mode v2
     self.addEventListener('fetch', event => {
+        if (event.request.url === getProductsUrl) {
+            const serviceFailedPromise = idb.open('products', 1).then(function(db) {
+                var tx = db.transaction(['beverages'], 'readonly');
+                var store = tx.objectStore('beverages');
+                return store.getAll();
+            }).then(function(items) {                
+                return new Response(JSON.stringify({ data: items}));        
+            })
+            event.respondWith(fetch(event.request).then(response => {
+                if (response.status === 404) {
+                    console.log('[ServiceWorker] Loading products from indexedDB');                
+                    return serviceFailedPromise
+
+                }
+                return response;
+            }).catch(()=> {
+                console.log('[ServiceWorker] Loading products from indexedDB');
+                return serviceFailedPromise;
+            }));
+            return;
+        }
         event.respondWith(caches.open(expectedCache).then(cache =>
             cache.match(event.request).then(response => {
                 return fetch(event.request).then(response => {
