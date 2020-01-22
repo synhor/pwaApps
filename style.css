@@ -8,11 +8,23 @@ body {
 
 .clock {
     position: absolute;
-    top: 50%;
+    bottom: 10px;
     left: 50%;
     transform: translateX(-50%) translateY(-50%);
     color: #17D4FE;
-    font-size: 60px;
+    font-size: 30px;
     font-family: Orbitron;
     letter-spacing: 7px;
+}
+.productsContainer .productContainer {
+    display: inline-block;
+    color: white;
+}
+
+.productContainer {
+    margin: 20px;
+}
+
+.productPicture {
+    height: 50px;
 }

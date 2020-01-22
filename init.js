@@ -1,7 +1,21 @@
 var showProducts = function(){
   fetch('http://localhost/pwaServices/getProducts').then(function(response){
-    response.clone().json().then(function(jsonObj){
-        console.log(JSON.stringify(jsonObj));
+    response.clone().json().then(function(jsonObj){      
+      jsonObj.data.forEach(function(item){
+        var productNode = document.createElement('div')
+        var productNameNode = document.createElement('div');
+        var productPriceNode = document.createElement('div');
+        var productPictureNode = document.createElement('img');
+        productPictureNode.src = './images/products/' + item.id + '.png';
+        productNameNode.textContent = item.name;
+        productPriceNode.textContent = item.price;
+        productPictureNode.className = 'productPicture'
+        productNode.className = 'productContainer'
+        productNode.appendChild(productNameNode);
+        productNode.appendChild(productPictureNode);
+        productNode.appendChild(productPriceNode);
+        document.getElementById('productsCatalog').appendChild(productNode);
+      })
     })
   })
 }
