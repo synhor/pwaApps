@@ -4,7 +4,7 @@ const useServiceWorker = true;
 const serviceWorkerExcludedHosts = [];
  
 const filesToCache = [
-    appPath + '/images/',
+    appPath + '/init.js',
     appPath + '/index.html',
     appPath + '/clock.js',
     appPath + '/style.css'
